@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: prowin
+      POSTGRES_PASSWORD: prowin_dev
+      POSTGRES_DB: prowin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prowin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin_dev
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://prowin:prowin_dev@postgres:5432/prowin
+      - S3_ENDPOINT_URL=http://minio:9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin_dev
+      - S3_BUCKET_NAME=prowin-belege
+      - WHATSAPP_PROVIDER=stub
+      - OCR_PROVIDER=stub
+      - LLM_PROVIDER=stub
+      - SECRET_KEY=dev-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin_dev
+      - WEBHOOK_URL=http://localhost:5678
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  postgres_data:
+  minio_data:
+  n8n_data:
