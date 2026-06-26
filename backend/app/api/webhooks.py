@@ -42,12 +42,8 @@ class WhatsAppConfirm(BaseModel):
 
 
 @router.post("/whatsapp")
-async def whatsapp_inbound(
-    payload: WhatsAppInbound, session: AsyncSession = Depends(get_session)
-):
-    mandant = await session.scalar(
-        select(Mandant).where(Mandant.whatsapp_phone == payload.phone)
-    )
+async def whatsapp_inbound(payload: WhatsAppInbound, session: AsyncSession = Depends(get_session)):
+    mandant = await session.scalar(select(Mandant).where(Mandant.whatsapp_phone == payload.phone))
     if mandant is None:
         raise HTTPException(status_code=404, detail="Unbekannte Telefonnummer")
 
@@ -127,9 +123,7 @@ async def whatsapp_inbound(
 
 
 @router.post("/whatsapp/confirm")
-async def whatsapp_confirm(
-    payload: WhatsAppConfirm, session: AsyncSession = Depends(get_session)
-):
+async def whatsapp_confirm(payload: WhatsAppConfirm, session: AsyncSession = Depends(get_session)):
     """EINZIGER Buchungspfad aus WhatsApp — nur nach Button-Bestätigung."""
     try:
         buchung = await bestaetige_und_buche(

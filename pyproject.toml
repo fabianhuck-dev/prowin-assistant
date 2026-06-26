@@ -49,6 +49,12 @@ line-length = 100
 select = ["E", "F", "W", "I", "N", "UP"]
 ignore = ["E501"]
 
+[tool.ruff.lint.per-file-ignores]
+# sys.path-Setup muss vor den Imports stehen (Test-/Skript-Bootstrapping).
+"backend/tests/conftest.py" = ["E402"]
+"scripts/seed.py" = ["E402"]
+"scripts/demo.py" = ["E402"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = false

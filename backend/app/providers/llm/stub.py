@@ -38,7 +38,8 @@ class StubLlmProvider(LlmProvider):
         if haendler is None:
             fehlende_felder.append("haendler")
 
-        belegtyp, kategorie = _KIND_MAP.get(kind, ("ausgabe", "Sonstiges"))
+        belegtyp, _kat = _KIND_MAP.get(kind, ("ausgabe", "Sonstiges"))
+        kategorie: str | None = _kat
 
         # Niedrige Confidence oder unbekannter Beleg -> keine Kategorie, Rückfrage.
         if confidence < CONFIDENCE_RUECKFRAGE or kind == "unbekannt":

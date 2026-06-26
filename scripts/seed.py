@@ -46,9 +46,7 @@ async def seed_kategorien(session: AsyncSession) -> int:
     created = 0
     for name, typ in DEFAULT_KATEGORIEN:
         exists = await session.scalar(
-            select(Kategorie).where(
-                Kategorie.name == name, Kategorie.is_system_default.is_(True)
-            )
+            select(Kategorie).where(Kategorie.name == name, Kategorie.is_system_default.is_(True))
         )
         if exists is None:
             session.add(Kategorie(name=name, typ=typ, is_system_default=True))

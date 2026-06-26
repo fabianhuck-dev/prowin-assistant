@@ -5,6 +5,7 @@ Revises:
 Create Date: 2026-06-27
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -24,7 +25,9 @@ def upgrade() -> None:
         sa.Column("whatsapp_phone", sa.String(length=32), nullable=False, unique=True),
         sa.Column("is_kleinunternehmer", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("steuernummer", sa.String(length=64), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     op.create_table(
@@ -34,7 +37,9 @@ def upgrade() -> None:
         sa.Column("typ", sa.String(length=32), nullable=False),
         sa.Column("is_system_default", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("mandant_id", sa.Uuid(), sa.ForeignKey("mandant.id"), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     op.create_table(
@@ -56,7 +61,9 @@ def upgrade() -> None:
         sa.Column("status", sa.String(length=16), nullable=False, server_default="eingegangen"),
         sa.Column("quelle", sa.String(length=16), nullable=False, server_default="whatsapp"),
         sa.Column("plausi_warnung", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index("ix_beleg_sha256_hash", "beleg", ["sha256_hash"], unique=True)
 
@@ -75,7 +82,9 @@ def upgrade() -> None:
         sa.Column("bestaetigt_am", sa.DateTime(timezone=True), nullable=True),
         sa.Column("storniert", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("storno_von_id", sa.Uuid(), sa.ForeignKey("buchung.id"), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     op.create_table(
@@ -90,17 +99,23 @@ def upgrade() -> None:
         sa.Column("bezahlt", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("bezahlt_am", sa.Date(), nullable=True),
         sa.Column("status", sa.String(length=16), nullable=False, server_default="offen"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     op.create_table(
         "zahlungserinnerung",
         sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("kundenrechnung_id", sa.Uuid(), sa.ForeignKey("kundenrechnung.id"), nullable=False),
+        sa.Column(
+            "kundenrechnung_id", sa.Uuid(), sa.ForeignKey("kundenrechnung.id"), nullable=False
+        ),
         sa.Column("stufe", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("versendet_am", sa.DateTime(timezone=True), nullable=True),
         sa.Column("text", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     op.create_table(
@@ -113,7 +128,9 @@ def upgrade() -> None:
         sa.Column("status", sa.String(length=16), nullable=False, server_default="offen"),
         sa.Column("antwort", sa.Text(), nullable=True),
         sa.Column("beantwortet_am", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     op.create_table(
@@ -126,7 +143,9 @@ def upgrade() -> None:
         sa.Column("storage_key", sa.String(length=512), nullable=False),
         sa.Column("sha256_hash", sa.String(length=64), nullable=False),
         sa.Column("anzahl_buchungen", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     # audit_log: append-only, bigserial PK
@@ -139,7 +158,9 @@ def upgrade() -> None:
         sa.Column("action", sa.String(length=64), nullable=False),
         sa.Column("actor", sa.String(length=128), nullable=False),
         sa.Column("payload", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     # Regel 4: audit_log ist append-only. UPDATE/DELETE werden auf DB-Ebene verboten.

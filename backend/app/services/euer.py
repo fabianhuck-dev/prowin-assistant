@@ -53,9 +53,7 @@ async def _summen_nach_kategorie(
     ]
 
 
-async def berechne_euer(
-    session: AsyncSession, mandant_id: uuid.UUID, jahr: int
-) -> EuerVorschau:
+async def berechne_euer(session: AsyncSession, mandant_id: uuid.UUID, jahr: int) -> EuerVorschau:
     einnahmen = await _summen_nach_kategorie(session, mandant_id, jahr, "einnahme")
     ausgaben = await _summen_nach_kategorie(session, mandant_id, jahr, "ausgabe")
 

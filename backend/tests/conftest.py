@@ -19,13 +19,12 @@ if str(_REPO_ROOT) not in sys.path:
 
 import pytest
 import pytest_asyncio
+from app.db import models
+from app.db.base import Base
+from app.services import immutability
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
-
-from app.db.base import Base
-from app.db import models
-from app.services import immutability
 
 
 @pytest_asyncio.fixture
@@ -103,8 +102,8 @@ async def seed_kategorien(session) -> dict[str, models.Kategorie]:
 @pytest_asyncio.fixture
 async def client(session_factory) -> AsyncGenerator[AsyncClient, None]:
     """httpx-Client gegen die FastAPI-App mit überschriebener DB-Session."""
-    from app.main import app
     from app.db.base import get_session
+    from app.main import app
 
     async def _override_get_session() -> AsyncGenerator[AsyncSession, None]:
         async with session_factory() as s:

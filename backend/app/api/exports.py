@@ -32,9 +32,7 @@ async def export_erstellen(payload: ExportRequest, session: AsyncSession = Depen
 async def exports_liste(mandant_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
     rows = (
         await session.scalars(
-            select(Export)
-            .where(Export.mandant_id == mandant_id)
-            .order_by(Export.created_at.desc())
+            select(Export).where(Export.mandant_id == mandant_id).order_by(Export.created_at.desc())
         )
     ).all()
     return [ExportOut.model_validate(e) for e in rows]

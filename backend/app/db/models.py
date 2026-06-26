@@ -55,9 +55,7 @@ class Beleg(Base):
     __tablename__ = "beleg"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    mandant_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("mandant.id"), nullable=False
-    )
+    mandant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("mandant.id"), nullable=False)
     storage_key: Mapped[str] = mapped_column(String(512), nullable=False)
     sha256_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     original_filename: Mapped[str | None] = mapped_column(String(512), nullable=True)
@@ -91,12 +89,8 @@ class Buchung(Base):
     __tablename__ = "buchung"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    mandant_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("mandant.id"), nullable=False
-    )
-    beleg_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("beleg.id"), nullable=True
-    )
+    mandant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("mandant.id"), nullable=False)
+    beleg_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("beleg.id"), nullable=True)
     kategorie_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("kategorie.id"), nullable=True
     )
@@ -125,9 +119,7 @@ class Kundenrechnung(Base):
     __tablename__ = "kundenrechnung"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    mandant_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("mandant.id"), nullable=False
-    )
+    mandant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("mandant.id"), nullable=False)
     rechnungsnummer: Mapped[str] = mapped_column(String(64), nullable=False)
     kunde_name: Mapped[str] = mapped_column(String(255), nullable=False)
     betrag: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
@@ -160,12 +152,8 @@ class Rueckfrage(Base):
     __tablename__ = "rueckfrage"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    mandant_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("mandant.id"), nullable=False
-    )
-    beleg_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("beleg.id"), nullable=True
-    )
+    mandant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("mandant.id"), nullable=False)
+    beleg_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("beleg.id"), nullable=True)
     frage_text: Mapped[str] = mapped_column(Text, nullable=False)
     feld: Mapped[str | None] = mapped_column(String(64), nullable=True)
     # status: "offen" | "beantwortet"
@@ -181,9 +169,7 @@ class Export(Base):
     __tablename__ = "export"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    mandant_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("mandant.id"), nullable=False
-    )
+    mandant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("mandant.id"), nullable=False)
     # format: "datev_csv" | "pdf"
     format: Mapped[str] = mapped_column(String(16), nullable=False)
     von: Mapped[date] = mapped_column(Date, nullable=False)

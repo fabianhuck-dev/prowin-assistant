@@ -13,8 +13,6 @@ import hashlib
 import uuid
 
 import pytest
-from sqlalchemy import text
-
 from app.services import immutability
 from app.services.audit import append_audit
 from app.services.immutability import (
@@ -22,6 +20,7 @@ from app.services.immutability import (
     compute_sha256,
     upload_beleg_write_once,
 )
+from sqlalchemy import text
 
 
 async def test_compute_sha256_matches_hashlib():

@@ -75,9 +75,11 @@ async def bestaetige_und_buche(
     betrag = korrekturen.get("betrag")
     if betrag is None:
         betrag = vorschlag.get("betrag") if vorschlag.get("betrag") is not None else beleg.betrag
-    datum = _parse_iso_date(korrekturen.get("datum")) or _parse_iso_date(
-        vorschlag.get("datum")
-    ) or beleg.datum
+    datum = (
+        _parse_iso_date(korrekturen.get("datum"))
+        or _parse_iso_date(vorschlag.get("datum"))
+        or beleg.datum
+    )
     haendler = korrekturen.get("haendler") or vorschlag.get("haendler") or beleg.haendler
     buchungstext = korrekturen.get("buchungstext") or f"Beleg {beleg.id}"
 

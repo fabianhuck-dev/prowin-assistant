@@ -9,13 +9,12 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 import pytest
-from sqlalchemy import func, select
-
 from app.db.models import Beleg, Buchung, Rueckfrage
 from app.providers.llm.stub import StubLlmProvider
 from app.providers.ocr.stub import StubOcrProvider
 from app.services.classification import ingest_beleg, klassifiziere_beleg, run_ocr
 from app.services.confirmation import bestaetige_und_buche
+from sqlalchemy import func, select
 
 
 async def _ingest_and_classify(session, mandant, kind: str):
@@ -110,9 +109,7 @@ async def test_t6_duplicate_no_second_beleg(session, mandant):
     assert dup1 is False
     assert dup2 is True
     assert beleg1.id == beleg2.id
-    total = (
-        await session.execute(select(func.count()).select_from(Beleg))
-    ).scalar_one()
+    total = (await session.execute(select(func.count()).select_from(Beleg))).scalar_one()
     assert total == 1
 
 
