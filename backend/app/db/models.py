@@ -202,7 +202,12 @@ class AuditLog(Base):
 
     __tablename__ = "audit_log"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    # BIGINT (bigserial) auf PostgreSQL, INTEGER auf SQLite (für Auto-Increment in Tests).
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     mandant_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
     entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
     entity_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)

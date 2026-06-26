@@ -142,8 +142,27 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
 
+    # Regel 4: audit_log ist append-only. UPDATE/DELETE werden auf DB-Ebene verboten.
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute(
+            """
+            CREATE OR REPLACE FUNCTION audit_log_immutable() RETURNS trigger AS $$
+            BEGIN
+                RAISE EXCEPTION 'audit_log is append-only (no UPDATE/DELETE allowed)';
+            END;
+            $$ LANGUAGE plpgsql;
+            """
+        )
+        op.execute(
+            "CREATE TRIGGER audit_log_no_modify BEFORE UPDATE OR DELETE ON audit_log "
+            "FOR EACH ROW EXECUTE FUNCTION audit_log_immutable();"
+        )
+
 
 def downgrade() -> None:
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute("DROP TRIGGER IF EXISTS audit_log_no_modify ON audit_log;")
+        op.execute("DROP FUNCTION IF EXISTS audit_log_immutable();")
     op.drop_table("audit_log")
     op.drop_table("export")
     op.drop_table("rueckfrage")
