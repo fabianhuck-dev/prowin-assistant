@@ -10,7 +10,7 @@ build:
 	docker compose build
 
 migrate:
-	cd backend && uv run alembic upgrade head
+	uv run alembic upgrade head
 
 seed:
 	cd backend && uv run python ../scripts/seed.py
