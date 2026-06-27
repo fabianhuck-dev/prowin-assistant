@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     mistral_api_base_url: str = "https://api.mistral.ai/v1"
     ocr_model: str = "mistral-ocr-latest"
     llm_model: str = "mistral-small-latest"
+    # Intent-Agent-Modell — leer = llm_model; hier kann ein stärkeres Modell gesetzt
+    # werden (z.B. mistral-medium-latest) ohne Code-Änderung.
+    intent_model: str = ""
 
     # Meta WhatsApp Cloud API
     whatsapp_verify_token: str = ""

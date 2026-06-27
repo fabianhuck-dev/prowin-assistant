@@ -99,6 +99,62 @@ Mit `WHATSAPP_PROVIDER=meta` + Tunnel können echte Belege vom Handy den
 vollständigen Pfad durchlaufen: Foto → Storage → OCR → LLM-Vorschlag
 → ✅-Button → Buchung → EÜR-Update im Chat.
 
+## Intelligenter Frage-Agent (Schritt 4)
+
+Neben dem Beleg-Flow kann Beli auf WhatsApp auch **Freitext-Fragen** zu den
+eigenen Buchhaltungsdaten beantworten.
+
+### Was Beli beantwortet
+
+| Frage (Beispiele) | Tool |
+|---|---|
+| „Was ist mein Gewinn dieses Jahr?" | `get_euer` |
+| „Ausgaben Oktober 2026" | `query_finanzen` |
+| „Vergleich Oktober mit September" | `query_finanzen` (vergleich) |
+| „Teuerste Ausgaben dieses Jahr" | `query_finanzen` (liste) |
+| „Ausgaben pro Kategorie" | `query_finanzen` (pro_kategorie) |
+| „Monatsverlauf meiner Einnahmen" | `query_finanzen` (pro_monat) |
+| „Fahrtkosten letzten Monat" | `query_finanzen` + Kategorie |
+| „Alle Belege über 50 €" | `query_finanzen` + betrag_min |
+| „Wer hat noch nicht bezahlt?" | `get_offene_rechnungen` |
+| „Export für meinen Steuerberater" | `create_export` |
+
+### Was Beli bewusst NICHT tut
+
+- **Keine Steuer-/Rechtsberatung** — Fragen wie „Kann ich X absetzen?", „Wie
+  viel Steuer zahle ich?" oder „Lohnt sich ProWin?" beantwortet Beli nicht
+  inhaltlich. Sie aktivieren automatisch `steuerberatung_grenze` und verweisen
+  auf den Steuerberater.
+- **Keine Geschäfts-/Finanzempfehlungen** — „Soll ich mehr investieren?" → Guard.
+- **Kein Weltwissen** — Beli kennt nur die eigenen Daten der Mandantin.
+- **Keine Buchungen** — der Frage-Agent liest ausschließlich, ändert nie Buchungen.
+
+### Technisches Prinzip (ADR-007/008/009)
+
+```
+Freitext → Mistral Function Calling → Tool-Auswahl (LLM)
+                                              ↓
+                              Code führt DB-Query aus (mandant_id aus Kontext)
+                                              ↓
+                              Code baut Antwort aus DB-Zahlen (Template)
+                                              ↓
+                                         WhatsApp-Antwort
+```
+
+**Zahlen kommen IMMER aus Code, nie aus dem LLM.** Kein Framework
+(LangChain/LangGraph) — natives Mistral Function Calling + einfaches Python-Dict
+als Router. Details: [docs/decisions.md](docs/decisions.md) ADR-007/008/009.
+
+### Konfiguration
+
+```bash
+# .env für den Live-Betrieb:
+LLM_PROVIDER=live          # aktiviert Mistral-API
+MISTRAL_API_KEY=<key>
+# Optional: stärkeres Modell nur für den Frage-Agenten
+INTENT_MODEL=mistral-medium-latest   # leer = LLM_MODEL
+```
+
 ## Architektur-Überblick
 
 ```

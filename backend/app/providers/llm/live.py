@@ -143,7 +143,9 @@ def _parse_vorschlag(data: dict, ocr_result: dict) -> LlmVorschlag:
     rueckfrage = data.get("rueckfrage_text") or None
     if not rueckfrage and (confidence < 0.60 or fehlende):
         fehlende_str = ", ".join(fehlende)
-        rueckfrage = f"Ich bin mir nicht sicher. Fehlende Angaben: {fehlende_str}. Kannst du helfen?"
+        rueckfrage = (
+            f"Ich bin mir nicht sicher. Fehlende Angaben: {fehlende_str}. Kannst du helfen?"
+        )
 
     return LlmVorschlag(
         belegtyp=data.get("belegtyp") or "unbekannt",

@@ -68,9 +68,7 @@ def _image_payload(wamid: str, from_phone: str, media_id: str = "media999") -> b
                                     "image": {"id": media_id, "mime_type": "image/jpeg"},
                                 }
                             ],
-                            "contacts": [
-                                {"wa_id": from_phone, "profile": {"name": "Test User"}}
-                            ],
+                            "contacts": [{"wa_id": from_phone, "profile": {"name": "Test User"}}],
                         }
                     }
                 ]
@@ -267,17 +265,13 @@ async def test_duplicate_wamid_only_one_beleg(client, mandant, stub_wa, session)
     assert resp2.status_code == 200
 
     # Nur ein Beleg, obwohl dieselbe wamid zweimal empfangen wurde.
-    beleg_count = (
-        await session.execute(select(func.count()).select_from(Beleg))
-    ).scalar_one()
+    beleg_count = (await session.execute(select(func.count()).select_from(Beleg))).scalar_one()
     assert beleg_count == 1
 
     # Nur ein WebhookEvent-Eintrag für diese wamid.
     event_count = (
         await session.execute(
-            select(func.count()).select_from(WebhookEvent).where(
-                WebhookEvent.wamid == "wamid.dup1"
-            )
+            select(func.count()).select_from(WebhookEvent).where(WebhookEvent.wamid == "wamid.dup1")
         )
     ).scalar_one()
     assert event_count == 1
@@ -308,15 +302,11 @@ async def test_inbound_image_creates_beleg_no_buchung(
     assert resp.status_code == 200
 
     # Beleg ist im Storage + DB.
-    beleg_count = (
-        await session.execute(select(func.count()).select_from(Beleg))
-    ).scalar_one()
+    beleg_count = (await session.execute(select(func.count()).select_from(Beleg))).scalar_one()
     assert beleg_count == 1
 
     # Compliance Regel 1: KEINE Buchung durch Ingest/OCR/LLM.
-    buchung_count = (
-        await session.execute(select(func.count()).select_from(Buchung))
-    ).scalar_one()
+    buchung_count = (await session.execute(select(func.count()).select_from(Buchung))).scalar_one()
     assert buchung_count == 0
 
     # Vorschlags-Nachricht mit Buttons wurde gesendet.
@@ -377,9 +367,7 @@ async def test_button_confirm_creates_exactly_one_buchung(
     resp = await client.post("/webhooks/whatsapp", content=body, headers=_meta_headers(body))
     assert resp.status_code == 200
 
-    buchung_count = (
-        await session.execute(select(func.count()).select_from(Buchung))
-    ).scalar_one()
+    buchung_count = (await session.execute(select(func.count()).select_from(Buchung))).scalar_one()
     assert buchung_count == 1
 
     # Bestätigungs-Nachricht gesendet.
@@ -411,9 +399,7 @@ async def test_confirm_gate_no_buchung_without_button(
 
     assert resp.status_code == 200
 
-    buchung_count = (
-        await session.execute(select(func.count()).select_from(Buchung))
-    ).scalar_one()
+    buchung_count = (await session.execute(select(func.count()).select_from(Buchung))).scalar_one()
     assert buchung_count == 0
 
 
@@ -547,9 +533,7 @@ async def test_button_reject_no_buchung(client, mandant, stub_wa, session, seed_
     resp = await client.post("/webhooks/whatsapp", content=body, headers=_meta_headers(body))
     assert resp.status_code == 200
 
-    buchung_count = (
-        await session.execute(select(func.count()).select_from(Buchung))
-    ).scalar_one()
+    buchung_count = (await session.execute(select(func.count()).select_from(Buchung))).scalar_one()
     assert buchung_count == 0
 
     await session.refresh(beleg)

@@ -19,7 +19,7 @@ import json
 import logging
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -85,17 +85,17 @@ def _verify_hmac(raw_body: bytes, sig_header: str) -> bool:
 
 
 @router.get("/whatsapp")
-async def whatsapp_verify(
-    hub_mode: str | None = Query(None, alias="hub.mode"),
-    hub_verify_token: str | None = Query(None, alias="hub.verify_token"),
-    hub_challenge: str | None = Query(None, alias="hub.challenge"),
-) -> Response:
+async def whatsapp_verify(request: Request) -> Response:
     """Webhook-Verifizierung durch Meta (hub.challenge Echo).
 
     Meta ruft diesen Endpoint auf, wenn du im Developer-Dashboard einen Webhook
     registrierst. Der korrekte Verify-Token muss mit WHATSAPP_VERIFY_TOKEN
     übereinstimmen; bei Erfolg wird hub.challenge als Plaintext zurückgegeben.
     """
+    params = request.query_params
+    hub_mode = params.get("hub.mode")
+    hub_verify_token = params.get("hub.verify_token")
+    hub_challenge = params.get("hub.challenge")
     if (
         hub_mode == "subscribe"
         and hub_verify_token
@@ -173,9 +173,7 @@ async def _process_meta_payload(raw_body: bytes) -> None:
                 try:
                     await _handle_meta_message(raw_msg)
                 except Exception:
-                    logger.exception(
-                        "Unbehandelte Ausnahme bei wamid=%s", raw_msg.get("id", "?")
-                    )
+                    logger.exception("Unbehandelte Ausnahme bei wamid=%s", raw_msg.get("id", "?"))
 
 
 async def _handle_meta_message(raw_msg: dict) -> None:
@@ -193,9 +191,7 @@ async def _handle_meta_message(raw_msg: dict) -> None:
 
     async with _active_session_factory()() as session:
         # Idempotenz: wamid schon gesehen → überspringen.
-        existing = await session.scalar(
-            select(WebhookEvent).where(WebhookEvent.wamid == wamid)
-        )
+        existing = await session.scalar(select(WebhookEvent).where(WebhookEvent.wamid == wamid))
         if existing is not None:
             logger.debug("wamid %s bereits verarbeitet — skip", wamid)
             return
@@ -203,9 +199,7 @@ async def _handle_meta_message(raw_msg: dict) -> None:
         session.add(WebhookEvent(wamid=wamid))
 
         # Mandant aus Telefonnummer auflösen.
-        mandant = await session.scalar(
-            select(Mandant).where(Mandant.whatsapp_phone == from_phone)
-        )
+        mandant = await session.scalar(select(Mandant).where(Mandant.whatsapp_phone == from_phone))
         if mandant is None:
             logger.info("Unbekannte Nummer %s — minimaler Onboarding-Hinweis", from_phone)
             try:
@@ -337,7 +331,7 @@ async def _handle_button_reply(
     btn_id = btn.get("id", "")
 
     if btn_id.startswith("confirm:"):
-        beleg_id_str = btn_id[len("confirm:"):]
+        beleg_id_str = btn_id[len("confirm:") :]
         try:
             beleg_id = uuid.UUID(beleg_id_str)
         except ValueError:
@@ -352,20 +346,17 @@ async def _handle_button_reply(
                 korrekturen=None,
             )
         except ValueError as exc:
-            return OutboundMessage(
-                to=mandant.whatsapp_phone, text=f"Buchung nicht möglich: {exc}"
-            )
+            return OutboundMessage(to=mandant.whatsapp_phone, text=f"Buchung nicht möglich: {exc}")
 
         return OutboundMessage(
             to=mandant.whatsapp_phone,
             text=(
-                f"Gebucht: {buchung.typ} {buchung.betrag} EUR "
-                f"am {buchung.datum.isoformat()}. ✅"
+                f"Gebucht: {buchung.typ} {buchung.betrag} EUR am {buchung.datum.isoformat()}. ✅"
             ),
         )
 
     if btn_id.startswith("reject:"):
-        beleg_id_str = btn_id[len("reject:"):]
+        beleg_id_str = btn_id[len("reject:") :]
         try:
             beleg_id = uuid.UUID(beleg_id_str)
             beleg = await session.get(Beleg, beleg_id)
@@ -386,10 +377,14 @@ async def _handle_text_message(
 ) -> OutboundMessage | None:
     """Verarbeitet eingehende Textnachricht.
 
-    Sucht zuerst nach offenen Rückfragen; antwortet sonst mit Hilfsnachricht.
-    TODO: Rückfrage-Auflösung implementieren (Phase 4).
+    Offene Rückfragen zu einem Beleg haben Vorrang. Sonst → IntentService
+    (Freitext-Fragen zu eigenen Buchhaltungsdaten).
+    Ohne konfigurierten Mistral-Key fällt der Agent auf einen Hinweis zurück.
     """
     from app.db.models import Rueckfrage
+    from app.services.intent import IntentService
+
+    text = (raw_msg.get("text") or {}).get("body", "").strip()
 
     offene_rückfrage = await session.scalar(
         select(Rueckfrage).where(
@@ -398,13 +393,19 @@ async def _handle_text_message(
         )
     )
     if offene_rückfrage is not None:
-        # TODO: Antwort auswerten und Klassifikation verfeinern (Phase 4).
+        # Rückfrage-Auflösung: Text als Antwort auf die offene Rückfrage interpretieren.
+        # Der Intent-Layer beantwortet hier keine Datenfrage, sondern nimmt die Antwort
+        # entgegen und könnte die Klassifikation verfeinern (Erweiterungspunkt).
         pass
 
-    return OutboundMessage(
-        to=mandant.whatsapp_phone,
-        text="Sende mir ein Foto deines Belegs, und ich kümmere mich darum!",
-    )
+    if not settings.mistral_api_key:
+        return OutboundMessage(
+            to=mandant.whatsapp_phone,
+            text="Sende mir ein Foto deines Belegs, und ich kümmere mich darum!",
+        )
+
+    antwort = await IntentService().handle(text, mandant.id, session)
+    return OutboundMessage(to=mandant.whatsapp_phone, text=antwort)
 
 
 # ---------------------------------------------------------------------------
@@ -421,9 +422,7 @@ async def _handle_stub_inbound(inbound, session: AsyncSession) -> Response:
 
     assert isinstance(inbound, InboundMessage)
 
-    mandant = await session.scalar(
-        select(Mandant).where(Mandant.whatsapp_phone == inbound.phone)
-    )
+    mandant = await session.scalar(select(Mandant).where(Mandant.whatsapp_phone == inbound.phone))
     if mandant is None:
         raise HTTPException(status_code=404, detail="Unbekannte Telefonnummer")
 
@@ -478,7 +477,11 @@ async def _handle_stub_inbound(inbound, session: AsyncSession) -> Response:
         await wa.send_message(OutboundMessage(to=inbound.phone, text=vorschlag.rueckfrage_text))
         return Response(
             content=json.dumps(
-                {"status": "rueckfrage", "beleg_id": str(beleg.id), "vorschlag": vorschlag.model_dump()}
+                {
+                    "status": "rueckfrage",
+                    "beleg_id": str(beleg.id),
+                    "vorschlag": vorschlag.model_dump(),
+                }
             ),
             media_type="application/json",
         )
