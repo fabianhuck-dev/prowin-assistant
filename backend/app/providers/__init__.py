@@ -10,6 +10,10 @@ def get_whatsapp_provider():
         from app.providers.whatsapp.stub import StubWhatsAppProvider
 
         return StubWhatsAppProvider()
+    if settings.whatsapp_provider == "meta":
+        from app.providers.whatsapp.meta import MetaWhatsAppProvider
+
+        return MetaWhatsAppProvider()
     raise ValueError(f"Unknown WhatsApp provider: {settings.whatsapp_provider}")
 
 
@@ -18,6 +22,10 @@ def get_ocr_provider():
         from app.providers.ocr.stub import StubOcrProvider
 
         return StubOcrProvider()
+    if settings.ocr_provider == "live":
+        from app.providers.ocr.live import MistralOcrProvider
+
+        return MistralOcrProvider()
     raise ValueError(f"Unknown OCR provider: {settings.ocr_provider}")
 
 
@@ -26,4 +34,8 @@ def get_llm_provider():
         from app.providers.llm.stub import StubLlmProvider
 
         return StubLlmProvider()
+    if settings.llm_provider == "live":
+        from app.providers.llm.live import MistralLlmProvider
+
+        return MistralLlmProvider()
     raise ValueError(f"Unknown LLM provider: {settings.llm_provider}")

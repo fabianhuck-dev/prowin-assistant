@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -46,6 +46,73 @@ async def ingest(payload: BelegIngestRequest, session: AsyncSession = Depends(ge
         status="dupliziert" if is_duplicate else beleg.status,
         is_duplicate=is_duplicate,
     )
+
+
+@router.post("/upload")
+async def upload(
+    mandant_id: uuid.UUID = Form(...),
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+):
+    """Datei-Upload mit vollständigem Pipeline-Durchlauf: Ingest → OCR → LLM-Vorschlag.
+
+    Für Tests mit echten Belegen (JPEG, PNG, PDF). Erzeugt NUR einen Vorschlag, keine Buchung.
+    """
+    data = await file.read()
+    mime_type = file.content_type or "image/jpeg"
+    filename = file.filename or "upload.jpg"
+
+    beleg, is_duplicate = await ingest_beleg(
+        session,
+        mandant_id=mandant_id,
+        data=data,
+        filename=filename,
+        mime_type=mime_type,
+        quelle="upload",
+    )
+
+    if is_duplicate:
+        await session.commit()
+        return {
+            "status": "duplicate",
+            "beleg_id": str(beleg.id),
+            "message": "Dieser Beleg wurde bereits hochgeladen (identischer Inhalt).",
+        }
+
+    ocr_result = await run_ocr(session, beleg, data, get_ocr_provider())
+    if ocr_result is None:
+        await session.commit()
+        return {
+            "status": "ocr_failed",
+            "beleg_id": str(beleg.id),
+            "message": "OCR fehlgeschlagen — Beleg wurde gespeichert, aber nicht gelesen.",
+        }
+
+    vorschlag = await klassifiziere_beleg(session, beleg.id, ocr_result, get_llm_provider())
+    await session.commit()
+
+    return {
+        "status": "vorschlag",
+        "beleg_id": str(beleg.id),
+        "is_duplicate": False,
+        "ocr": {
+            "raw_text": ocr_result.raw_text[:300] if ocr_result.raw_text else None,
+            "betrag": ocr_result.betrag,
+            "datum": ocr_result.datum,
+            "haendler": ocr_result.haendler,
+            "confidence": ocr_result.confidence,
+        },
+        "vorschlag": {
+            "belegtyp": vorschlag.belegtyp,
+            "betrag": vorschlag.betrag,
+            "datum": vorschlag.datum,
+            "haendler": vorschlag.haendler,
+            "kategorie_vorschlag": vorschlag.kategorie_vorschlag,
+            "confidence": vorschlag.confidence,
+            "rueckfrage_text": vorschlag.rueckfrage_text,
+        },
+        "plausi_warnung": beleg.plausi_warnung,
+    }
 
 
 @router.post("/{beleg_id}/klassifiziere", response_model=VorschlagResponse)

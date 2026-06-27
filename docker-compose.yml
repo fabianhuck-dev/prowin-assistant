@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -36,20 +34,16 @@ services:
 
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
+      # Docker-interne Adressen überschreiben die .env-Werte für Postgres/MinIO
       - DATABASE_URL=postgresql+asyncpg://prowin:prowin_dev@postgres:5432/prowin
       - S3_ENDPOINT_URL=http://minio:9000
-      - S3_ACCESS_KEY=minioadmin
-      - S3_SECRET_KEY=minioadmin_dev
-      - S3_BUCKET_NAME=prowin-belege
-      - WHATSAPP_PROVIDER=stub
-      - OCR_PROVIDER=stub
-      - LLM_PROVIDER=stub
-      - SECRET_KEY=dev-secret-key-change-in-production
     depends_on:
       postgres:
         condition: service_healthy

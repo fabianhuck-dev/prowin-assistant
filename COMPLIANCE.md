@@ -52,3 +52,24 @@ LLM überlassen.
 Keine Secrets im Repository (`.env` ist in `.gitignore`, nur `.env.example`
 eingecheckt). Die Architektur ist auf EU-/DE-Hosting ausgelegt (Postgres + S3
 selbst gehostet, z. B. Hetzner; LLM-Anbieter EU-Region-fähig konfigurierbar).
+
+## 9. Meta als Unterauftragsverarbeiter (DSGVO Art. 28)
+Bei Nutzung von `WHATSAPP_PROVIDER=meta` leitet WhatsApp-Mediennachrichten über
+Meta Platforms Ireland Ltd. (Meta). Meta ist damit **Unterauftragsverarbeiter**
+im Sinne der DSGVO.
+
+**Technische Schutzmaßnahme:** Eingehende Belege (Fotos, PDFs) werden
+**serverseitig und sofort** von der kurzlebigen Meta-Media-URL in die DE-Infrastruktur
+(MinIO/Hetzner Object Storage) übertragen. Es erfolgt keine Zwischenspeicherung
+außerhalb der eigenen Infrastruktur. Meta hat keinen dauerhaften Zugriff auf
+die Beleg-Inhalte nach dem Download.
+
+**Transparenzpflicht im Onboarding:** Nutzer müssen beim ersten Kontakt darüber
+informiert werden, dass ihre WhatsApp-Nachrichten (inkl. Beleg-Fotos) über die
+Meta-Infrastruktur geleitet werden, bevor sie in das System gelangen. Dieser
+Hinweis muss in den AGB/Datenschutzerklärung und im Onboarding-Flow enthalten sein.
+
+**Auftragsverarbeitungsvertrag:** Ein AVV mit Meta muss abgeschlossen sein
+(im Meta Business Manager → Data Use Checkup / WhatsApp Business Policy).
+→ `providers/whatsapp/meta.py` implementiert den serverseitigen Sofort-Download.
+→ Onboarding-Hinweis: TODO in `_handle_text_message` / Onboarding-Flow (Phase 4).

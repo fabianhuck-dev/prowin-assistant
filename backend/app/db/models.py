@@ -182,6 +182,26 @@ class Export(Base):
     )
 
 
+class WebhookEvent(Base):
+    """Deduplizierung eingehender Meta-Webhook-Nachrichten (wamid-Idempotenz).
+
+    Jede verarbeitete wamid landet exakt einmal hier. Duplikate (Meta retried
+    bis zu 7 Tage) werden über den UNIQUE-Constraint erkannt und übersprungen.
+    """
+
+    __tablename__ = "webhook_event"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
+    wamid: Mapped[str] = mapped_column(String(256), nullable=False, unique=True, index=True)
+    processed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class AuditLog(Base):
     """Append-only. Wird von der Applikation AUSSCHLIESSLICH per INSERT geschrieben.
     Niemals UPDATE oder DELETE. Kein cascade-delete-Relationship zeigt hierauf."""
@@ -216,5 +236,6 @@ __all__ = [
     "Zahlungserinnerung",
     "Rueckfrage",
     "Export",
+    "WebhookEvent",
     "AuditLog",
 ]

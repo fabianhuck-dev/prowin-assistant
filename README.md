@@ -59,6 +59,46 @@ Abgedeckt sind die Fälle **T1–T10** inkl. des zentralen **Confirm-Gates**
 (T10: keine Buchung ohne Bestätigung) sowie die Compliance-Invarianten
 (write-once Storage, append-only Audit-Log).
 
+## Echten WhatsApp-Provider aktivieren (Meta Cloud API)
+
+### Voraussetzungen (im Meta Developer Dashboard — kein Code)
+1. Meta-App + WhatsApp-Produkt anlegen auf `developers.facebook.com`.
+2. Test-Telefonnummer und bis zu 5 Empfängernummern hinterlegen (für Testbetrieb ohne Business-Verifizierung).
+3. **Permanenten System-User-Token** anlegen: Business Settings → System Users → Token mit `whatsapp_business_messaging` + `whatsapp_business_management`.
+4. `PHONE_NUMBER_ID` und App-Secret aus dem Dashboard kopieren.
+
+### Lokales Testen mit Tunnel
+
+```bash
+# Tunnel starten (öffentliche HTTPS-URL für Meta erforderlich)
+ngrok http 8000
+# oder: cloudflared tunnel --url http://localhost:8000
+
+# Tunnel-URL als Webhook im Meta Dashboard eintragen
+# (Dashboard → WhatsApp → Configuration → Webhook-URL: https://<tunnel>/webhooks/whatsapp)
+# Webhook-Feld "messages" subscriben.
+```
+
+### Provider umschalten
+
+```bash
+# .env anpassen:
+WHATSAPP_PROVIDER=meta
+WHATSAPP_VERIFY_TOKEN=<frei wählbar, identisch im Meta-Dashboard>
+WHATSAPP_APP_SECRET=<aus Meta App-Einstellungen>
+WHATSAPP_ACCESS_TOKEN=<permanenter System-User-Token>
+WHATSAPP_PHONE_NUMBER_ID=<aus dem WhatsApp-Setup>
+WHATSAPP_GRAPH_VERSION=v21.0
+
+# Stub (Tests + lokale Entwicklung ohne Meta-Account):
+WHATSAPP_PROVIDER=stub
+```
+
+Tests laufen immer mit `WHATSAPP_PROVIDER=stub` (kein echter Netzwerk-Call).
+Mit `WHATSAPP_PROVIDER=meta` + Tunnel können echte Belege vom Handy den
+vollständigen Pfad durchlaufen: Foto → Storage → OCR → LLM-Vorschlag
+→ ✅-Button → Buchung → EÜR-Update im Chat.
+
 ## Architektur-Überblick
 
 ```

@@ -15,6 +15,19 @@ class Settings(BaseSettings):
     ocr_provider: str = "stub"
     llm_provider: str = "stub"
 
+    # Mistral API (OCR_PROVIDER=live + LLM_PROVIDER=live)
+    mistral_api_key: str = ""
+    mistral_api_base_url: str = "https://api.mistral.ai/v1"
+    ocr_model: str = "mistral-ocr-latest"
+    llm_model: str = "mistral-small-latest"
+
+    # Meta WhatsApp Cloud API
+    whatsapp_verify_token: str = ""
+    whatsapp_app_secret: str = ""
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_graph_version: str = "v21.0"
+
     secret_key: str = "dev-secret-key"
     debug: bool = False
     log_level: str = "info"
