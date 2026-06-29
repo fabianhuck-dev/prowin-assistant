@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beli – Buchhaltung per WhatsApp | Fabian Huck</title>
+  <meta name="description" content="Beli ist ein intelligenter Buchhaltungs-Assistent für Selbstständige. Belege per WhatsApp einschicken, Beli erledigt den Rest." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:   #0e0e0e;
+      --white:   #f5f5f0;
+      --accent:  #25d366; /* WhatsApp-Grün — bewusste Wahl, sofort erkennbar */
+      --muted:   #6b6b6b;
+      --border:  #e0e0da;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--white);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -0.02em;
+      color: var(--black);
+      text-decoration: none;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .nav-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* HERO */
+    .hero {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.4rem, 5vw, 3.6rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      color: var(--black);
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      line-height: 1.65;
+      color: var(--muted);
+      max-width: 540px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* SIGNATURE ELEMENT — der eine mutige Moment:
+       eine animierte WhatsApp-Konversation die zeigt wie Beli funktioniert */
+    .chat-demo {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 1.2rem;
+      padding: 1.5rem;
+      max-width: 380px;
+      margin: 3rem 0 4rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+
+    .chat-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .chat-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .chat-status {
+      font-size: 0.75rem;
+      color: var(--accent);
+    }
+
+    .bubble {
+      display: inline-block;
+      padding: 0.6rem 0.9rem;
+      border-radius: 1rem;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      max-width: 90%;
+      margin-bottom: 0.5rem;
+    }
+
+    .bubble.user {
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 0.2rem;
+      margin-left: auto;
+      display: block;
+    }
+
+    .bubble.beli {
+      background: #f0f0eb;
+      color: var(--black);
+      border-bottom-left-radius: 0.2rem;
+    }
+
+    .bubble-row {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 0.25rem;
+    }
+
+    .bubble-row.right {
+      align-items: flex-end;
+    }
+
+    .time {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+      padding: 0 0.2rem;
+    }
+
+    /* HOW IT WORKS */
+    .section {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+
+    .step-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .step h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .step p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* FOOTER / IMPRESSUM */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .impressum {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .impressum strong {
+      color: var(--black);
+      font-weight: 600;
+    }
+
+    .impressum a {
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .hero { padding: 3rem 1.25rem 2rem; }
+      .section { padding: 2rem 1.25rem; }
+      footer { padding: 1.5rem 1.25rem; }
+      nav { padding: 1.25rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="logo" href="/">Beli<span>.</span></a>
+    <span class="nav-meta">von Fabian Huck</span>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Buchhaltung per WhatsApp</span>
+      <h1>Beleg schicken.<br /><em>Fertig.</em></h1>
+      <p class="hero-sub">
+        Beli ist dein Buchhaltungs-Assistent direkt in WhatsApp. 
+        Foto vom Bon, kurze Bestätigung — und alles ist erfasst. 
+        Am Jahresende exportierst du alles für deinen Steuerberater.
+      </p>
+
+      <!-- SIGNATURE ELEMENT: animierte Chat-Demo -->
+      <div class="chat-demo">
+        <div class="chat-header">
+          <div class="chat-avatar">B</div>
+          <div>
+            <div class="chat-name">Beli</div>
+            <div class="chat-status">● Online</div>
+          </div>
+        </div>
+
+        <div class="bubble-row right">
+          <div class="bubble user">📷 [Tankquittung.jpg]</div>
+          <span class="time">10:14</span>
+        </div>
+
+        <div class="bubble-row">
+          <div class="bubble beli">
+            Tankstelle Aral, <strong>54,80 €</strong>, 28.06.2026<br />
+            Als <em>Fahrtkosten</em> verbuchen?
+          </div>
+          <span class="time">10:14</span>
+        </div>
+
+        <div class="bubble-row right">
+          <div class="bubble user">✅ Ja, stimmt</div>
+          <span class="time">10:14</span>
+        </div>
+
+        <div class="bubble-row">
+          <div class="bubble beli">
+            ✓ Gebucht. Dein Gewinn im Juni: <strong>1.240 €</strong>
+          </div>
+          <span class="time">10:14</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-label">So funktioniert Beli</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-icon">📱</div>
+          <h3>Beleg schicken</h3>
+          <p>Foto direkt aus WhatsApp. Keine App, kein Login, keine Unterbrechung.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">🤖</div>
+          <h3>Beli liest</h3>
+          <p>KI erkennt Betrag, Datum und Händler — und schlägt die richtige Kategorie vor.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">✅</div>
+          <h3>Du bestätigst</h3>
+          <p>Ein Tipp auf ✅ — und die Buchung ist sicher erfasst. Du behältst immer die Kontrolle.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">📊</div>
+          <h3>Export für den StB</h3>
+          <p>DATEV-CSV und PDF-Bundle auf Knopfdruck. Dein Steuerberater freut sich.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="impressum">
+      <strong>Angaben gemäß § 5 TMG</strong><br /><br />
+      <strong>Fabian Huck</strong><br />
+      Mannheim, Deutschland<br />
+      <br />
+      <strong>Kontakt</strong><br />
+      E-Mail: <a href="mailto:huckfabian1@gmail.com">huckfabian1@gmail.com</a><br />
+      <br />
+      <strong>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</strong><br />
+      Fabian Huck<br />
+      <br />
+      Beli ist ein Softwareprodukt von Fabian Huck.
+    </div>
+  </footer>
+
+</body>
+</html>
